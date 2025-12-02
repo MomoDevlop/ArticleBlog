@@ -1,0 +1,213 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database 1 (Primary)
+  postgres-db1:
+    image: postgres:15-alpine
+    container_name: blog-postgres-db1
+    environment:
+      POSTGRES_DB: ${DB1_NAME}
+      POSTGRES_USER: ${DB1_USER}
+      POSTGRES_PASSWORD: ${DB1_PASSWORD}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_db1_data:/var/lib/postgresql/data
+      - ./database/init-db1.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - blog-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB1_USER} -d ${DB1_NAME}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # PostgreSQL Database 2 (Replica)
+  postgres-db2:
+    image: postgres:15-alpine
+    container_name: blog-postgres-db2
+    environment:
+      POSTGRES_DB: ${DB2_NAME}
+      POSTGRES_USER: ${DB2_USER}
+      POSTGRES_PASSWORD: ${DB2_PASSWORD}
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_db2_data:/var/lib/postgresql/data
+      - ./database/init-db2.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - blog-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB2_USER} -d ${DB2_NAME}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Zookeeper for Kafka
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.5.0
+    container_name: blog-zookeeper
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    ports:
+      - "2181:2181"
+    networks:
+      - blog-network
+    healthcheck:
+      test: ["CMD", "nc", "-z", "localhost", "2181"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Kafka Broker
+  kafka:
+    image: confluentinc/cp-kafka:7.5.0
+    container_name: blog-kafka
+    depends_on:
+      zookeeper:
+        condition: service_healthy
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092,PLAINTEXT_HOST://localhost:29092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+    ports:
+      - "9092:9092"
+      - "29092:29092"
+    networks:
+      - blog-network
+    healthcheck:
+      test: ["CMD", "kafka-broker-api-versions", "--bootstrap-server", "localhost:9092"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  # Flask REST API
+  flask-api:
+    build:
+      context: ./flask-api
+      dockerfile: Dockerfile
+    container_name: blog-flask-api
+    environment:
+      FLASK_ENV: ${FLASK_ENV}
+      FLASK_DEBUG: ${FLASK_DEBUG}
+      SECRET_KEY: ${SECRET_KEY}
+      DATABASE_URL: postgresql://${DB1_USER}:${DB1_PASSWORD}@postgres-db1:5432/${DB1_NAME}
+      KAFKA_BOOTSTRAP_SERVERS: ${KAFKA_BOOTSTRAP_SERVERS}
+      KAFKA_TOPIC_ARTICLES: ${KAFKA_TOPIC_ARTICLES}
+    ports:
+      - "5000:5000"
+    depends_on:
+      postgres-db1:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+    networks:
+      - blog-network
+    volumes:
+      - ./flask-api:/app
+    command: ["gunicorn", "-w", "4", "-b", "0.0.0.0:5000", "app:create_app()"]
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/api/v1/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # GraphQL Gateway
+  graphql-gateway:
+    build:
+      context: ./graphql-gateway
+      dockerfile: Dockerfile
+    container_name: blog-graphql-gateway
+    environment:
+      GRAPHQL_PORT: ${GRAPHQL_PORT}
+      REST_API_URL: ${REST_API_URL}
+    ports:
+      - "4000:4000"
+    depends_on:
+      flask-api:
+        condition: service_healthy
+    networks:
+      - blog-network
+    volumes:
+      - ./graphql-gateway:/app
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:4000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Kafka Sync Service
+  kafka-sync:
+    build:
+      context: ./kafka-sync
+      dockerfile: Dockerfile
+    container_name: blog-kafka-sync
+    environment:
+      KAFKA_BOOTSTRAP_SERVERS: ${KAFKA_BOOTSTRAP_SERVERS}
+      KAFKA_TOPIC_ARTICLES: ${KAFKA_TOPIC_ARTICLES}
+      KAFKA_GROUP_ID: blog-sync-group
+      DB2_URL: postgresql://${DB2_USER}:${DB2_PASSWORD}@postgres-db2:5432/${DB2_NAME}
+    depends_on:
+      postgres-db2:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+      flask-api:
+        condition: service_healthy
+    networks:
+      - blog-network
+    volumes:
+      - ./kafka-sync:/app
+    restart: unless-stopped
+
+  # Prometheus
+  prometheus:
+    image: prom/prometheus:v2.47.0
+    container_name: blog-prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/usr/share/prometheus/console_libraries'
+      - '--web.console.templates=/usr/share/prometheus/consoles'
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./monitoring/prometheus:/etc/prometheus
+      - prometheus_data:/prometheus
+    networks:
+      - blog-network
+    restart: unless-stopped
+
+  # Grafana
+  grafana:
+    image: grafana/grafana:10.2.0
+    container_name: blog-grafana
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: admin
+      GF_USERS_ALLOW_SIGN_UP: false
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./monitoring/grafana/provisioning:/etc/grafana/provisioning
+      - grafana_data:/var/lib/grafana
+    depends_on:
+      - prometheus
+    networks:
+      - blog-network
+    restart: unless-stopped
+
+networks:
+  blog-network:
+    driver: bridge
+
+volumes:
+  postgres_db1_data:
+  postgres_db2_data:
+  prometheus_data:
+  grafana_data:

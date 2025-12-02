@@ -1,0 +1,51 @@
+groups:
+  - name: api_alerts
+    rules:
+      # API Down Alert
+      - alert: APIDown
+        expr: up{job="flask-api"} == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Flask API is down"
+          description: "Flask API has been down for more than 1 minute"
+
+      - alert: GraphQLGatewayDown
+        expr: up{job="graphql-gateway"} == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "GraphQL Gateway is down"
+          description: "GraphQL Gateway has been down for more than 1 minute"
+
+      # High Latency Alert
+      - alert: HighLatency
+        expr: histogram_quantile(0.99, http_request_duration_seconds_bucket) > 0.5
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High API latency detected"
+          description: "99th percentile latency is above 500ms for 5 minutes"
+
+      # High Error Rate Alert
+      - alert: HighErrorRate
+        expr: rate(http_requests_total{status=~"5.."}[5m]) > 0.05
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High error rate detected"
+          description: "Error rate (5xx) is above 5% for 5 minutes"
+
+      # High 4xx Rate Alert
+      - alert: HighClientErrorRate
+        expr: rate(http_requests_total{status=~"4.."}[5m]) > 0.1
+        for: 10m
+        labels:
+          severity: info
+        annotations:
+          summary: "High client error rate detected"
+          description: "Client error rate (4xx) is above 10% for 10 minutes"

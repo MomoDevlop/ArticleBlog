@@ -1,0 +1,1310 @@
+{
+	"info": {
+		"_postman_id": "blog-api-collection-2024",
+		"name": "Blog API - REST & GraphQL",
+		"description": "Collection complète pour tester l'API Blog avec Flask REST et GraphQL Gateway",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "1. Health & Metrics",
+			"item": [
+				{
+					"name": "Health Check - Flask API",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response has status healthy\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.status).to.eql('healthy');",
+									"    pm.expect(jsonData.service).to.eql('flask-api');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{REST_API_URL}}/health",
+							"host": ["{{REST_API_URL}}"],
+							"path": ["health"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Health Check - GraphQL Gateway",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response has status healthy\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.status).to.eql('healthy');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{GRAPHQL_URL}}/health",
+							"host": ["{{GRAPHQL_URL}}"],
+							"path": ["health"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Prometheus Metrics",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response contains metrics\", function () {",
+									"    pm.expect(pm.response.text()).to.include('http_requests_total');",
+									"    pm.expect(pm.response.text()).to.include('http_request_duration_seconds');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{REST_API_URL}}/metrics",
+							"host": ["{{REST_API_URL}}"],
+							"path": ["metrics"]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "2. Articles - CRUD Operations",
+			"item": [
+				{
+					"name": "List All Articles",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response has items and page_info\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('items');",
+									"    pm.expect(jsonData).to.have.property('page_info');",
+									"    pm.expect(jsonData.items).to.be.an('array');",
+									"});",
+									"",
+									"pm.test(\"Pagination info is correct\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.page_info).to.have.property('current_page');",
+									"    pm.expect(jsonData.page_info).to.have.property('total_pages');",
+									"    pm.expect(jsonData.page_info).to.have.property('per_page');",
+									"    pm.expect(jsonData.page_info).to.have.property('total_items');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{REST_API_URL}}/articles",
+							"host": ["{{REST_API_URL}}"],
+							"path": ["articles"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "List Articles - With Pagination",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Page 2 with 2 items per page\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.page_info.current_page).to.eql(2);",
+									"    pm.expect(jsonData.page_info.per_page).to.eql(2);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{REST_API_URL}}/articles?page=2&per_page=2",
+							"host": ["{{REST_API_URL}}"],
+							"path": ["articles"],
+							"query": [
+								{
+									"key": "page",
+									"value": "2"
+								},
+								{
+									"key": "per_page",
+									"value": "2"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Single Article",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Article has all required fields\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('id');",
+									"    pm.expect(jsonData).to.have.property('title');",
+									"    pm.expect(jsonData).to.have.property('content');",
+									"    pm.expect(jsonData).to.have.property('author');",
+									"    pm.expect(jsonData).to.have.property('category');",
+									"    pm.expect(jsonData).to.have.property('status');",
+									"    pm.expect(jsonData).to.have.property('views_count');",
+									"});",
+									"",
+									"pm.test(\"Views count incremented\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.views_count).to.be.above(0);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{REST_API_URL}}/articles/1",
+							"host": ["{{REST_API_URL}}"],
+							"path": ["articles", "1"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Create Article",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 201\", function () {",
+									"    pm.response.to.have.status(201);",
+									"});",
+									"",
+									"pm.test(\"Article created successfully\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('id');",
+									"    pm.expect(jsonData.title).to.eql('Test Article from Postman');",
+									"    pm.expect(jsonData.status).to.eql('draft');",
+									"    ",
+									"    // Save article ID for later tests",
+									"    pm.collectionVariables.set('created_article_id', jsonData.id);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"title\": \"Test Article from Postman\",\n    \"content\": \"This is a test article created from Postman collection. It demonstrates the CREATE operation of the REST API.\",\n    \"author\": \"Postman Tester\",\n    \"category\": \"testing\",\n    \"tags\": [\"postman\", \"test\", \"api\"]\n}"
+						},
+						"url": {
+							"raw": "{{REST_API_URL}}/articles",
+							"host": ["{{REST_API_URL}}"],
+							"path": ["articles"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update Article (PUT)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Article updated successfully\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.title).to.include('UPDATED');",
+									"    pm.expect(jsonData.category).to.eql('automation');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"title\": \"Test Article from Postman - UPDATED\",\n    \"content\": \"This article has been updated using PUT method.\",\n    \"author\": \"Postman Tester\",\n    \"category\": \"automation\",\n    \"tags\": [\"postman\", \"updated\", \"put\"]\n}"
+						},
+						"url": {
+							"raw": "{{REST_API_URL}}/articles/{{created_article_id}}",
+							"host": ["{{REST_API_URL}}"],
+							"path": ["articles", "{{created_article_id}}"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Partial Update Article (PATCH)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Only category updated\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.category).to.eql('integration-test');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"category\": \"integration-test\"\n}"
+						},
+						"url": {
+							"raw": "{{REST_API_URL}}/articles/{{created_article_id}}",
+							"host": ["{{REST_API_URL}}"],
+							"path": ["articles", "{{created_article_id}}"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Article",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 204\", function () {",
+									"    pm.response.to.have.status(204);",
+									"});",
+									"",
+									"pm.test(\"No content returned\", function () {",
+									"    pm.expect(pm.response.text()).to.be.empty;",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{REST_API_URL}}/articles/{{created_article_id}}",
+							"host": ["{{REST_API_URL}}"],
+							"path": ["articles", "{{created_article_id}}"]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "3. Articles - Advanced Features",
+			"item": [
+				{
+					"name": "Filter by Status - Published",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"All articles are published\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    jsonData.items.forEach(function(article) {",
+									"        pm.expect(article.status).to.eql('published');",
+									"    });",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{REST_API_URL}}/articles?status=published",
+							"host": ["{{REST_API_URL}}"],
+							"path": ["articles"],
+							"query": [
+								{
+									"key": "status",
+									"value": "published"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Filter by Status - Draft",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"All articles are drafts\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    jsonData.items.forEach(function(article) {",
+									"        pm.expect(article.status).to.eql('draft');",
+									"    });",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{REST_API_URL}}/articles?status=draft",
+							"host": ["{{REST_API_URL}}"],
+							"path": ["articles"],
+							"query": [
+								{
+									"key": "status",
+									"value": "draft"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Filter by Category",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"All articles match category\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    jsonData.items.forEach(function(article) {",
+									"        pm.expect(article.category).to.eql('technology');",
+									"    });",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{REST_API_URL}}/articles?category=technology",
+							"host": ["{{REST_API_URL}}"],
+							"path": ["articles"],
+							"query": [
+								{
+									"key": "category",
+									"value": "technology"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Filter by Author",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"All articles by same author\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    jsonData.items.forEach(function(article) {",
+									"        pm.expect(article.author).to.eql('John Doe');",
+									"    });",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{REST_API_URL}}/articles?author=John Doe",
+							"host": ["{{REST_API_URL}}"],
+							"path": ["articles"],
+							"query": [
+								{
+									"key": "author",
+									"value": "John Doe"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Search Articles - GraphQL",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Search results returned\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('query');",
+									"    pm.expect(jsonData).to.have.property('count');",
+									"    pm.expect(jsonData).to.have.property('results');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{REST_API_URL}}/articles/search?q=graphql",
+							"host": ["{{REST_API_URL}}"],
+							"path": ["articles", "search"],
+							"query": [
+								{
+									"key": "q",
+									"value": "graphql"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Search Articles - Flask",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Search results contain keyword\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.results.length).to.be.above(0);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{REST_API_URL}}/articles/search?q=flask",
+							"host": ["{{REST_API_URL}}"],
+							"path": ["articles", "search"],
+							"query": [
+								{
+									"key": "q",
+									"value": "flask"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Publish Article",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Article status is published\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.status).to.eql('published');",
+									"    pm.expect(jsonData.published_at).to.not.be.null;",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{REST_API_URL}}/articles/2/publish",
+							"host": ["{{REST_API_URL}}"],
+							"path": ["articles", "2", "publish"]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "4. GraphQL - Queries",
+			"item": [
+				{
+					"name": "Query - Get All Articles",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"GraphQL response has data\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('data');",
+									"    pm.expect(jsonData.data).to.have.property('articles');",
+									"    pm.expect(jsonData.data.articles).to.have.property('items');",
+									"    pm.expect(jsonData.data.articles).to.have.property('pageInfo');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"query\": \"query GetArticles { articles(page: 1, perPage: 10) { items { id title author category status viewsCount createdAt } pageInfo { currentPage totalPages perPage totalItems hasNext hasPrev } } }\"\n}"
+						},
+						"url": {
+							"raw": "{{GRAPHQL_URL}}/graphql",
+							"host": ["{{GRAPHQL_URL}}"],
+							"path": ["graphql"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Query - Get Single Article",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Article returned with all fields\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.data.article).to.have.property('id');",
+									"    pm.expect(jsonData.data.article).to.have.property('title');",
+									"    pm.expect(jsonData.data.article).to.have.property('content');",
+									"    pm.expect(jsonData.data.article).to.have.property('author');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"query\": \"query GetArticle($id: ID!) { article(id: $id) { id title content author category tags status viewsCount createdAt updatedAt publishedAt } }\",\n    \"variables\": {\n        \"id\": \"1\"\n    }\n}"
+						},
+						"url": {
+							"raw": "{{GRAPHQL_URL}}/graphql",
+							"host": ["{{GRAPHQL_URL}}"],
+							"path": ["graphql"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Query - Filter by Status",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"All articles have published status\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    jsonData.data.articles.items.forEach(function(article) {",
+									"        pm.expect(article.status).to.eql('PUBLISHED');",
+									"    });",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"query\": \"query FilterArticles($filter: ArticleFilterInput) { articles(filter: $filter) { items { id title status } pageInfo { totalItems } } }\",\n    \"variables\": {\n        \"filter\": {\n            \"status\": \"PUBLISHED\"\n        }\n    }\n}"
+						},
+						"url": {
+							"raw": "{{GRAPHQL_URL}}/graphql",
+							"host": ["{{GRAPHQL_URL}}"],
+							"path": ["graphql"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Query - Filter by Category",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"All articles have technology category\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    jsonData.data.articles.items.forEach(function(article) {",
+									"        pm.expect(article.category).to.eql('technology');",
+									"    });",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"query\": \"query FilterByCategory($filter: ArticleFilterInput) { articles(filter: $filter) { items { id title category } pageInfo { totalItems } } }\",\n    \"variables\": {\n        \"filter\": {\n            \"category\": \"technology\"\n        }\n    }\n}"
+						},
+						"url": {
+							"raw": "{{GRAPHQL_URL}}/graphql",
+							"host": ["{{GRAPHQL_URL}}"],
+							"path": ["graphql"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Query - Search Articles",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Search results returned\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.data.searchArticles).to.be.an('array');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"query\": \"query SearchArticles($query: String!) { searchArticles(query: $query) { id title content author category } }\",\n    \"variables\": {\n        \"query\": \"api\"\n    }\n}"
+						},
+						"url": {
+							"raw": "{{GRAPHQL_URL}}/graphql",
+							"host": ["{{GRAPHQL_URL}}"],
+							"path": ["graphql"]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "5. GraphQL - Mutations",
+			"item": [
+				{
+					"name": "Mutation - Create Article",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Article created via GraphQL\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.data.createArticle).to.have.property('id');",
+									"    pm.expect(jsonData.data.createArticle.title).to.eql('GraphQL Test Article');",
+									"    pm.expect(jsonData.data.createArticle.status).to.eql('DRAFT');",
+									"    ",
+									"    // Save for later tests",
+									"    pm.collectionVariables.set('graphql_article_id', jsonData.data.createArticle.id);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"query\": \"mutation CreateArticle($input: ArticleInput!) { createArticle(input: $input) { id title content author category tags status createdAt } }\",\n    \"variables\": {\n        \"input\": {\n            \"title\": \"GraphQL Test Article\",\n            \"content\": \"This article was created using GraphQL mutation from Postman.\",\n            \"author\": \"GraphQL Tester\",\n            \"category\": \"graphql\",\n            \"tags\": [\"graphql\", \"mutation\", \"postman\"]\n        }\n    }\n}"
+						},
+						"url": {
+							"raw": "{{GRAPHQL_URL}}/graphql",
+							"host": ["{{GRAPHQL_URL}}"],
+							"path": ["graphql"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Mutation - Update Article",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Article updated via GraphQL\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.data.updateArticle.title).to.include('UPDATED');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"query\": \"mutation UpdateArticle($id: ID!, $input: ArticleUpdateInput!) { updateArticle(id: $id, input: $input) { id title content updatedAt } }\",\n    \"variables\": {\n        \"id\": \"{{graphql_article_id}}\",\n        \"input\": {\n            \"title\": \"GraphQL Test Article - UPDATED\",\n            \"content\": \"This article was updated using GraphQL mutation.\"\n        }\n    }\n}"
+						},
+						"url": {
+							"raw": "{{GRAPHQL_URL}}/graphql",
+							"host": ["{{GRAPHQL_URL}}"],
+							"path": ["graphql"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Mutation - Publish Article",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Article published via GraphQL\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.data.publishArticle.status).to.eql('PUBLISHED');",
+									"    pm.expect(jsonData.data.publishArticle.publishedAt).to.not.be.null;",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"query\": \"mutation PublishArticle($id: ID!) { publishArticle(id: $id) { id status publishedAt } }\",\n    \"variables\": {\n        \"id\": \"{{graphql_article_id}}\"\n    }\n}"
+						},
+						"url": {
+							"raw": "{{GRAPHQL_URL}}/graphql",
+							"host": ["{{GRAPHQL_URL}}"],
+							"path": ["graphql"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Mutation - Delete Article",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Article deleted via GraphQL\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.data.deleteArticle).to.be.true;",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"query\": \"mutation DeleteArticle($id: ID!) { deleteArticle(id: $id) }\",\n    \"variables\": {\n        \"id\": \"{{graphql_article_id}}\"\n    }\n}"
+						},
+						"url": {
+							"raw": "{{GRAPHQL_URL}}/graphql",
+							"host": ["{{GRAPHQL_URL}}"],
+							"path": ["graphql"]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "6. Error Cases & Validation",
+			"item": [
+				{
+					"name": "Get Non-Existent Article (404)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 404\", function () {",
+									"    pm.response.to.have.status(404);",
+									"});",
+									"",
+									"pm.test(\"Error message returned\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.error).to.eql('Article not found');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{REST_API_URL}}/articles/99999",
+							"host": ["{{REST_API_URL}}"],
+							"path": ["articles", "99999"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Create Article - Missing Required Fields",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 400\", function () {",
+									"    pm.response.to.have.status(400);",
+									"});",
+									"",
+									"pm.test(\"Validation errors returned\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('errors');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"title\": \"Incomplete Article\"\n}"
+						},
+						"url": {
+							"raw": "{{REST_API_URL}}/articles",
+							"host": ["{{REST_API_URL}}"],
+							"path": ["articles"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update Non-Existent Article (404)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 404\", function () {",
+									"    pm.response.to.have.status(404);",
+									"});",
+									"",
+									"pm.test(\"Error message returned\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.error).to.eql('Article not found');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"title\": \"Updated Title\",\n    \"content\": \"Updated content\",\n    \"author\": \"Test Author\"\n}"
+						},
+						"url": {
+							"raw": "{{REST_API_URL}}/articles/99999",
+							"host": ["{{REST_API_URL}}"],
+							"path": ["articles", "99999"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Non-Existent Article (404)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 404\", function () {",
+									"    pm.response.to.have.status(404);",
+									"});",
+									"",
+									"pm.test(\"Error message returned\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.error).to.eql('Article not found');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{REST_API_URL}}/articles/99999",
+							"host": ["{{REST_API_URL}}"],
+							"path": ["articles", "99999"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Search Without Query Parameter",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 400\", function () {",
+									"    pm.response.to.have.status(400);",
+									"});",
+									"",
+									"pm.test(\"Error about missing query parameter\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.error).to.include('required');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{REST_API_URL}}/articles/search",
+							"host": ["{{REST_API_URL}}"],
+							"path": ["articles", "search"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "GraphQL - Invalid Query Syntax",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 400\", function () {",
+									"    pm.response.to.have.status(400);",
+									"});",
+									"",
+									"pm.test(\"GraphQL error returned\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('errors');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"query\": \"query { invalid syntax here }\"\n}"
+						},
+						"url": {
+							"raw": "{{GRAPHQL_URL}}/graphql",
+							"host": ["{{GRAPHQL_URL}}"],
+							"path": ["graphql"]
+						}
+					},
+					"response": []
+				}
+			]
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "REST_API_URL",
+			"value": "http://localhost:5000/api/v1",
+			"type": "string"
+		},
+		{
+			"key": "GRAPHQL_URL",
+			"value": "http://localhost:4000",
+			"type": "string"
+		},
+		{
+			"key": "created_article_id",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "graphql_article_id",
+			"value": "",
+			"type": "string"
+		}
+	]
+}

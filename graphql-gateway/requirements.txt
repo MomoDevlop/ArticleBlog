@@ -1,0 +1,19 @@
+# GraphQL
+strawberry-graphql[fastapi]==0.218.0
+
+# Web framework
+fastapi==0.104.1
+uvicorn[standard]==0.24.0
+
+# HTTP client
+httpx==0.25.1
+
+# Retry logic
+tenacity==8.2.3
+
+# Utilities
+python-dotenv==1.0.0
+
+# Testing (development)
+pytest==7.4.3
+pytest-asyncio==0.21.1
