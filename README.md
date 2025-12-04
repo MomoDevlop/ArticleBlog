@@ -80,32 +80,32 @@ Ce projet est une application de démonstration complète illustrant:
 ## Fonctionnalités
 
 ### API REST Flask
-- ✅ CRUD complet sur les articles
-- ✅ Pagination et filtrage
-- ✅ Recherche full-text
-- ✅ Publication d'articles
-- ✅ Validation avec Marshmallow
-- ✅ Métriques Prometheus
+-  CRUD complet sur les articles
+-  Pagination et filtrage
+-  Recherche full-text
+-  Publication d'articles
+-  Validation avec Marshmallow
+-  Métriques Prometheus
 
 ### GraphQL Gateway
-- ✅ Queries (article, articles, searchArticles)
-- ✅ Mutations (createArticle, updateArticle, deleteArticle, publishArticle)
-- ✅ Types fortement typés
-- ✅ Filtrage et pagination
-- ✅ Playground GraphQL intégré
+-  Queries (article, articles, searchArticles)
+-  Mutations (createArticle, updateArticle, deleteArticle, publishArticle)
+-  Types fortement typés
+-  Filtrage et pagination
+-  Playground GraphQL intégré
 
 ### Synchronisation Kafka
-- ✅ Événements en temps réel
-- ✅ Idempotence (évite les doublons)
-- ✅ Retry logic avec backoff
-- ✅ Gestion des erreurs
-- ✅ Logging détaillé
+-  Événements en temps réel
+-  Idempotence (évite les doublons)
+-  Retry logic avec backoff
+-  Gestion des erreurs
+-  Logging détaillé
 
 ### Monitoring
-- ✅ Métriques Prometheus
-- ✅ Dashboards Grafana
-- ✅ Alerting configuré
-- ✅ Health checks
+-  Métriques Prometheus
+-  Dashboards Grafana
+-  Alerting configuré
+-  Health checks
 
 ## Prérequis
 
