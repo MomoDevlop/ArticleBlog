@@ -109,8 +109,6 @@ KAFKA_BOOTSTRAP_SERVERS=kafka:9092
 KAFKA_TOPIC_ARTICLES=article-events
 ```
 
-⚠️ **Important:** En production, changez toutes les valeurs de sécurité (SECRET_KEY, mots de passe, etc.)
-
 ### Étape 3: Rendre les Scripts Exécutables (Linux/macOS)
 
 ```bash
