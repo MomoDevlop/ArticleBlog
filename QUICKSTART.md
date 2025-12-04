@@ -195,11 +195,11 @@ docker-compose up -d kafka
 
 ## Prochaines Étapes
 
-1. 📖 Lire la [Documentation complète](README.md)
-2. 🔧 Consulter le [Guide d'Installation](docs/INSTALLATION.md)
-3. 📚 Voir la [Documentation API](docs/API_DOCUMENTATION.md)
-4. 📊 Explorer Grafana pour voir les métriques
-5. 🧪 Tester les endpoints avec Postman ou curl
+1.  Lire la [Documentation complète](README.md)
+2.  Consulter le [Guide d'Installation](docs/INSTALLATION.md)
+3.  Voir la [Documentation API](docs/API_DOCUMENTATION.md)
+4.  Explorer Grafana pour voir les métriques
+5.  Tester les endpoints avec Postman ou curl
 
 ## Support
 
@@ -209,4 +209,3 @@ docker-compose up -d kafka
 
 ---
 
-**Bon développement!**
